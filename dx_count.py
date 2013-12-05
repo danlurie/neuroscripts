@@ -47,7 +47,7 @@ for dx in dx_list:
     # Strip cruft from R output
     dx_print = re.sub("[^0-9]", "", dx_sum_string)
     # Write the diagnosis and number of subjects to the output file
-    output_file.write("%s,%s\n" % (dx, dx_print))
+    output_file.write('\n"%s",%s' % (dx, dx_print))
 
 # Close the output file
 output_file.close()
