@@ -19,7 +19,7 @@ class do_qc():
 		self.wm_threshold = wm_threshold
 
 		self.anat_path = self.pipeline_path + self.sub_id + '/anatomical_reorient/anat_resample.nii.gz'
-		self.fg_mask_path = self.pipeline_path + self.sub_id + '/anatomical_csf_mask/_csf_threshold_' + self.csf_threshold + '/segment_prob_0_maths_maths_maths.nii.gz'
+		self.fg_mask_path = self.pipeline_path + self.sub_id + '/anatomical_reorient/qc_head_mask.nii.gz'
 		self.csf_mask_path = self.pipeline_path + self.sub_id + '/anatomical_csf_mask/_csf_threshold_' + self.csf_threshold + '/segment_prob_0_maths_maths_maths.nii.gz'
 		self.gm_mask_path = self.pipeline_path + self.sub_id + '/anatomical_gm_mask/_gm_threshold_' + self.gm_threshold + '/segment_prob_1_maths_maths_maths.nii.gz'
 		self.wm_mask_path = self.pipeline_path + self.sub_id + '/anatomical_wm_mask/_wm_threshold_' + self.wm_threshold + '/segment_prob_2_maths_maths_maths.nii.gz'
@@ -27,6 +27,13 @@ class do_qc():
 		# Read in and load anatomical data.
 		self.anat_image = self.load_image(self.anat_path, 'anatomical')
 		self.anat_data = self.anat_image.get_data()
+
+		# Create a head mask based on the anatomical data (but check first if this has already been created).
+		if os.path.isfile(self.pipeline_path + self.sub_id + '/anatomical_reorient/qc_head_mask.nii.gz') == False:
+			mask_command = '3dAutomask -q -prefix ' + self.pipeline_path + self.sub_id + '/anatomical_reorient/qc_head_mask.nii.gz -dilate 2 ' + self.pipeline_path + self.sub_id + '/anatomical_reorient/anat_resample.nii.gz'
+			os.system(mask_command)
+		else:
+			pass
 
 		# Read in, verify, and load foreground mask data.
 		self.fg_mask_image = self.load_image(self.fg_mask_path, 'foreground mask')
