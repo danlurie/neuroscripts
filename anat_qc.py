@@ -23,7 +23,7 @@ Note: When specifying pipeline_path, make sure it has a trailing slash
 csf, wm, and gm_thresh are the tissue probability thresholds (e.g. CPAC strategy) to run on.
 These should be specified as floats, just like in the CPAC pipeline configuration file.
 
-Created by Dan Lurie (danjlurie@gmail.com) based on code from Cameron Craddock and Zarrar Shehzad
+Created by Dan Lurie (danjlurie@gmail.com) based on code from Cameron Craddock (algorithms/calculations)
 '''
 
 
@@ -127,8 +127,11 @@ class do_qc():
 		# Calculate EFC
 		self.qc_dict['efc'] = self.calc_efc(self.anat_data)
 
-		# Calculate QI1
-		self.qc_dict['qi1'] = self.calc_artifacts(self.anat_data, self.fg_mask_data)
+		# Calculate QI1 and handle exceptions if data is float.
+		try: 
+			self.qc_dict['qi1'] = self.calc_artifacts(self.anat_data, self.fg_mask_data)
+		except:
+			pass
 		
 
 	def load_image(self, image_file, image_type):
@@ -280,7 +283,7 @@ gm_threshold = sys.argv[3]
 wm_threshold = sys.argv[4]
 
 subject_list = os.listdir(pipeline_path)
-#subject_list = ['0021001_session_1', '0021002_session_1', '002100s3_session_1']
+#subject_list = ['0025834_session_2','0025835_session_1','0025835_session_2','0025836_session_1','0025836_session_2','0025837_session_1','0025837_session_2','0025838_session_1','0025838_session_2','0025839_session_1','0025839_session_2','0025840_session_1','0025840_session_2','0025841_session_1','0025841_session_2']
 
 '''
 ### CODE TO RUN ON A SINGLE CORE ###
@@ -334,6 +337,7 @@ def run_subs_multiproc(sub_id, p_path, csf_thresh, gm_thresh, wm_thresh):
 		# Create a variable that allows us to return the subject's QC dictionary.
 		# Only runs if no errors are encountered.
 		sub_dict = subject_qc.qc_dict
+		print("QC calculated for subject %s" % (sub_id))
 	return sub_dict
 	
 # Create a "partial" function from run_subs_multiproc that sets defaults values for all arguments except for sub_id.
@@ -341,7 +345,7 @@ def run_subs_multiproc(sub_id, p_path, csf_thresh, gm_thresh, wm_thresh):
 partial_run_subs_multiproc = partial(run_subs_multiproc, p_path=pipeline_path, csf_thresh=csf_threshold, gm_thresh=gm_threshold, wm_thresh=wm_threshold)
 
 # Create a pool for multiprocessing
-pool = Pool(2) # Use 2 cores.
+pool = Pool(48) # Use 2 cores.
 
 # Run QC on every subject in subject_list, store the results as a list.
 multiproc_store = pool.map(partial_run_subs_multiproc, subject_list)
@@ -354,4 +358,4 @@ pool.join()
 multiproc_df = pd.DataFrame.from_records(multiproc_store).set_index('subject')
 
 # Save the newly created DataFrame as a .csv
-multiproc_df.to_csv('/data/Projects/CoRR/preproc/qc/scripts/test.csv')
+multiproc_df.to_csv('/data/Projects/CoRR/preproc/qc/anat_qc.csv')
