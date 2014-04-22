@@ -1,3 +1,32 @@
+'''
+Program to calculate a number of quality control measures for anatomical neuroimaging data (T1 images).
+
+Set up to run on CPAC (http://fcp-indi.github.io) output directories, but should be easily modifiable to
+run on any data structure.
+
+Output is written to a CSV, currently specified as a path on line 357 (this will be changed to a
+command-line argument in future versions)
+
+This script can be run either serially (on a single core, one subject at a time) or in parallel
+(on multiple cores, multiple subjects at a time). By default, anat_qc.py will run on 10 cores.
+To change the number of cores or switch to single-core mode, comment out the relevant code near
+the bottom of the script.
+
+Usage:
+
+python anat_qc.py pipeline_path csf_thresh wm_thresh gm_thresh
+
+pipeline_path is the path to the CPAC pipeline on which you would like to run the QC.
+By default, all subejcts will be run (but you can also manually specifiy a subject list, see lines 282 and 283)
+Note: When specifying pipeline_path, make sure it has a trailing slash
+
+csf, wm, and gm_thresh are the tissue probability thresholds (e.g. CPAC strategy) to run on.
+These should be specified as floats, just like in the CPAC pipeline configuration file.
+
+Created by Dan Lurie (danjlurie@gmail.com) based on code from Cameron Craddock and Zarrar Shehzad
+'''
+
+
 import numpy as np
 import nibabel as nb
 import pandas as pd
@@ -250,8 +279,8 @@ gm_threshold = sys.argv[3]
 
 wm_threshold = sys.argv[4]
 
-#subject_list = os.listdir(pipeline_path)
-subject_list = ['0021001_session_1', '0021002_session_1', '002100s3_session_1']
+subject_list = os.listdir(pipeline_path)
+#subject_list = ['0021001_session_1', '0021002_session_1', '002100s3_session_1']
 
 '''
 ### CODE TO RUN ON A SINGLE CORE ###
@@ -283,6 +312,8 @@ qc_serial_dict = run_subs(subject_list, pipeline_path, csf_threshold, gm_thresho
 
 # From our meta-dictionary, create a new pandas DataFrame, with meta-level keys (subjects) as rows and QC measures as columns.
 qc_df = pd.DataFrame.from_dict(qc_serial_dict, orient='index')
+
+qc_df.to_csv('/data/Projects/CoRR/preproc/qc/scripts/test.csv')
 
 '''
 
@@ -321,8 +352,6 @@ pool.join()
 
 # Create a new dataframe from our multiproc_store, with subjects as rows and QC measures as columns.
 multiproc_df = pd.DataFrame.from_records(multiproc_store).set_index('subject')
-
-#code.interact(local=locals())
 
 # Save the newly created DataFrame as a .csv
 multiproc_df.to_csv('/data/Projects/CoRR/preproc/qc/scripts/test.csv')
