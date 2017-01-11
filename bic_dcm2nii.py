@@ -10,7 +10,7 @@ This script will convert all anatomical (MPRAGE) and functional (EPI) scans for 
 Usage:
 ======
 
-python bic_dcm2nii dicom_dir nifti_dir
+python bic_dcm2nii.py dicom_dir nifti_dir
 
 
 Notes:
